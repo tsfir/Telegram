@@ -16,10 +16,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.telegram.android.AndroidUtilities;
-import org.telegram.android.ContactsController;
+import org.telegram.android.UserObject;
 import org.telegram.messenger.TLRPC;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
+import org.telegram.ui.Components.LayoutHelper;
 
 public class MentionCell extends LinearLayout {
 
@@ -38,13 +39,7 @@ public class MentionCell extends LinearLayout {
 
         imageView = new BackupImageView(context);
         imageView.setRoundRadius(AndroidUtilities.dp(14));
-        addView(imageView);
-        LayoutParams layoutParams = (LayoutParams) imageView.getLayoutParams();
-        layoutParams.leftMargin = AndroidUtilities.dp(12);
-        layoutParams.topMargin = AndroidUtilities.dp(4);
-        layoutParams.width = AndroidUtilities.dp(28);
-        layoutParams.height = AndroidUtilities.dp(28);
-        imageView.setLayoutParams(layoutParams);
+        addView(imageView, LayoutHelper.createLinear(28, 28, 12, 4, 0, 0));
 
         nameTextView = new TextView(context);
         nameTextView.setTextColor(0xff000000);
@@ -52,13 +47,7 @@ public class MentionCell extends LinearLayout {
         nameTextView.setSingleLine(true);
         nameTextView.setGravity(Gravity.LEFT);
         nameTextView.setEllipsize(TextUtils.TruncateAt.END);
-        addView(nameTextView);
-        layoutParams = (LayoutParams) nameTextView.getLayoutParams();
-        layoutParams.leftMargin = AndroidUtilities.dp(12);
-        layoutParams.width = LayoutParams.WRAP_CONTENT;
-        layoutParams.height = LayoutParams.WRAP_CONTENT;
-        layoutParams.gravity = Gravity.CENTER_VERTICAL;
-        nameTextView.setLayoutParams(layoutParams);
+        addView(nameTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 12, 0, 0, 0));
 
         usernameTextView = new TextView(context);
         usernameTextView.setTextColor(0xff999999);
@@ -66,13 +55,7 @@ public class MentionCell extends LinearLayout {
         usernameTextView.setSingleLine(true);
         usernameTextView.setGravity(Gravity.LEFT);
         usernameTextView.setEllipsize(TextUtils.TruncateAt.END);
-        addView(usernameTextView);
-        layoutParams = (LayoutParams) usernameTextView.getLayoutParams();
-        layoutParams.leftMargin = AndroidUtilities.dp(12);
-        layoutParams.width = LayoutParams.WRAP_CONTENT;
-        layoutParams.height = LayoutParams.WRAP_CONTENT;
-        layoutParams.gravity = Gravity.CENTER_VERTICAL;
-        usernameTextView.setLayoutParams(layoutParams);
+        addView(usernameTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 12, 0, 8, 0));
     }
 
     @Override
@@ -93,7 +76,7 @@ public class MentionCell extends LinearLayout {
         } else {
             imageView.setImageDrawable(avatarDrawable);
         }
-        nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
+        nameTextView.setText(UserObject.getUserName(user));
         usernameTextView.setText("@" + user.username);
         imageView.setVisibility(VISIBLE);
         usernameTextView.setVisibility(VISIBLE);
@@ -103,5 +86,32 @@ public class MentionCell extends LinearLayout {
         imageView.setVisibility(INVISIBLE);
         usernameTextView.setVisibility(INVISIBLE);
         nameTextView.setText(text);
+    }
+
+    public void setBotCommand(String command, String help, TLRPC.User user) {
+        if (user != null) {
+            imageView.setVisibility(VISIBLE);
+            avatarDrawable.setInfo(user);
+            if (user.photo != null && user.photo.photo_small != null) {
+                imageView.setImage(user.photo.photo_small, "50_50", avatarDrawable);
+            } else {
+                imageView.setImageDrawable(avatarDrawable);
+            }
+        } else {
+            imageView.setVisibility(INVISIBLE);
+        }
+        usernameTextView.setVisibility(VISIBLE);
+        nameTextView.setText(command);
+        usernameTextView.setText(help);
+    }
+
+    public void setIsDarkTheme(boolean isDarkTheme) {
+        if (isDarkTheme) {
+            nameTextView.setTextColor(0xffffffff);
+            usernameTextView.setTextColor(0xff999999);
+        } else {
+            nameTextView.setTextColor(0xff000000);
+            usernameTextView.setTextColor(0xff999999);
+        }
     }
 }

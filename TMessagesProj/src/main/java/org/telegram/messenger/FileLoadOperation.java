@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 1.3.2.
+ * This is the source code of Telegram for Android v. 2.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013.
+ * Copyright Nikolai Kudashov, 2013-2015.
  */
 
 package org.telegram.messenger;
@@ -28,6 +28,7 @@ public class FileLoadOperation {
     private final static int stateFinished = 3;
 
     private final static int downloadChunkSize = 1024 * 32;
+    private final static int downloadChunkSizeBig = 1024 * 128;
     private final static int maxDownloadRequests = 3;
 
     private int datacenter_id;
@@ -38,6 +39,7 @@ public class FileLoadOperation {
     private FileLoadOperationDelegate delegate;
     private byte[] key;
     private byte[] iv;
+    private int currentDownloadChunkSize;
 
     private int nextDownloadOffset = 0;
     private ArrayList<RequestInfo> requestInfos = new ArrayList<>(maxDownloadRequests);
@@ -60,7 +62,7 @@ public class FileLoadOperation {
         void didChangedLoadProgress(FileLoadOperation operation, float progress);
     }
 
-    public FileLoadOperation(TLRPC.FileLocation photoLocation, int size) {
+    public FileLoadOperation(TLRPC.FileLocation photoLocation, String extension, int size) {
         if (photoLocation instanceof TLRPC.TL_fileEncryptedLocation) {
             location = new TLRPC.TL_inputEncryptedFileLocation();
             location.id = photoLocation.volume_id;
@@ -79,10 +81,7 @@ public class FileLoadOperation {
             datacenter_id = photoLocation.dc_id;
         }
         totalBytesCount = size;
-        ext = photoLocation.ext;
-        if (ext == null) {
-            ext = "jpg";
-        }
+        ext = extension != null ? extension : "jpg";
     }
 
     public FileLoadOperation(TLRPC.Video videoLocation) {
@@ -140,7 +139,7 @@ public class FileLoadOperation {
         }
         totalBytesCount = documentLocation.size;
         ext = FileLoader.getDocumentFileName(documentLocation);
-        int idx = -1;
+        int idx;
         if (ext == null || (idx = ext.lastIndexOf(".")) == -1) {
             ext = "";
         } else {
@@ -168,6 +167,7 @@ public class FileLoadOperation {
         if (state != stateIdle) {
             return;
         }
+        currentDownloadChunkSize = totalBytesCount >= 1024 * 1024 * 30 ? downloadChunkSizeBig : downloadChunkSize;
         state = stateDownloading;
         if (location == null) {
             Utilities.stageQueue.postRunnable(new Runnable() {
@@ -178,9 +178,8 @@ public class FileLoadOperation {
             });
             return;
         }
-        Long mediaId = null;
-        String fileNameFinal = null;
-        String fileNameTemp = null;
+        String fileNameFinal;
+        String fileNameTemp;
         String fileNameIv = null;
         if (location.volume_id != 0 && location.local_id != 0) {
             fileNameTemp = location.volume_id + "_" + location.local_id + "_temp." + ext;
@@ -219,7 +218,6 @@ public class FileLoadOperation {
         cacheFileFinal = new File(storePath, fileNameFinal);
         boolean exist = cacheFileFinal.exists();
         if (exist && totalBytesCount != 0 && totalBytesCount != cacheFileFinal.length()) {
-            exist = false;
             cacheFileFinal.delete();
         }
 
@@ -227,8 +225,13 @@ public class FileLoadOperation {
             cacheFileTemp = new File(tempPath, fileNameTemp);
             if (cacheFileTemp.exists()) {
                 downloadedBytes = (int)cacheFileTemp.length();
-                nextDownloadOffset = downloadedBytes = downloadedBytes / 1024 * 1024;
+                nextDownloadOffset = downloadedBytes = downloadedBytes / currentDownloadChunkSize * currentDownloadChunkSize;
             }
+
+            if (BuildVars.DEBUG_VERSION) {
+                FileLog.d("tmessages", "start loading file to temp = " + cacheFileTemp + " final = " + cacheFileFinal);
+            }
+
             if (fileNameIv != null) {
                 cacheIvTemp = new File(tempPath, fileNameIv);
                 try {
@@ -293,6 +296,9 @@ public class FileLoadOperation {
                     return;
                 }
                 state = stateFailed;
+                if (BuildVars.DEBUG_VERSION) {
+                    FileLog.e("tmessages", "cancel downloading file to " + cacheFileFinal);
+                }
                 cleanup();
                 for (RequestInfo requestInfo : requestInfos) {
                     if (requestInfo.requestToken != 0) {
@@ -342,8 +348,14 @@ public class FileLoadOperation {
         }
         if (cacheFileTemp != null) {
             if (!cacheFileTemp.renameTo(cacheFileFinal)) {
+                if (BuildVars.DEBUG_VERSION) {
+                    FileLog.e("tmessages", "unable to rename temp = " + cacheFileTemp + " to final = " + cacheFileFinal);
+                }
                 cacheFileFinal = cacheFileTemp;
             }
+        }
+        if (BuildVars.DEBUG_VERSION) {
+            FileLog.e("tmessages", "finished downloading file to " + cacheFileFinal);
         }
         delegate.didFinishLoadingFile(FileLoadOperation.this, cacheFileFinal);
     }
@@ -388,15 +400,14 @@ public class FileLoadOperation {
                         processRequestResult(delayedRequestInfo, null);
                         delayedRequestInfo.response.disableFree = false;
                         delayedRequestInfo.response.freeResources();
-                        delayedRequestInfo = null;
                         break;
                     }
                 }
 
-                if (currentBytesSize != downloadChunkSize) {
+                if (currentBytesSize != currentDownloadChunkSize) {
                     onFinishLoadingFile();
                 } else {
-                    if (totalBytesCount != downloadedBytes && downloadedBytes % downloadChunkSize == 0 || totalBytesCount > 0 && totalBytesCount > downloadedBytes) {
+                    if (totalBytesCount != downloadedBytes && downloadedBytes % currentDownloadChunkSize == 0 || totalBytesCount > 0 && totalBytesCount > downloadedBytes) {
                         startDownloadRequest();
                     } else {
                         onFinishLoadingFile();
@@ -427,7 +438,7 @@ public class FileLoadOperation {
                     startDownloadRequest();
                 }
             } else if (error.text.contains("OFFSET_INVALID")) {
-                if (downloadedBytes % downloadChunkSize == 0) {
+                if (downloadedBytes % currentDownloadChunkSize == 0) {
                     try {
                         onFinishLoadingFile();
                     } catch (Exception e) {
@@ -465,12 +476,12 @@ public class FileLoadOperation {
             if (totalBytesCount > 0 && nextDownloadOffset >= totalBytesCount) {
                 break;
             }
-            boolean isLast = totalBytesCount <= 0 || a == count - 1 || totalBytesCount > 0 && nextDownloadOffset + downloadChunkSize >= totalBytesCount;
+            boolean isLast = totalBytesCount <= 0 || a == count - 1 || totalBytesCount > 0 && nextDownloadOffset + currentDownloadChunkSize >= totalBytesCount;
             TLRPC.TL_upload_getFile req = new TLRPC.TL_upload_getFile();
             req.location = location;
             req.offset = nextDownloadOffset;
-            req.limit = downloadChunkSize;
-            nextDownloadOffset += downloadChunkSize;
+            req.limit = currentDownloadChunkSize;
+            nextDownloadOffset += currentDownloadChunkSize;
 
             final RequestInfo requestInfo = new RequestInfo();
             requestInfos.add(requestInfo);

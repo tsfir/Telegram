@@ -12,7 +12,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +34,7 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -52,7 +52,7 @@ public class LanguageSelectActivity extends BaseFragment {
     public ArrayList<LocaleController.LocaleInfo> searchResult;
 
     @Override
-    public View createView(Context context, LayoutInflater inflater) {
+    public View createView(Context context) {
         searching = false;
         searchWas = false;
 
@@ -77,7 +77,7 @@ public class LanguageSelectActivity extends BaseFragment {
             }
 
             @Override
-            public boolean onSearchCollapse() {
+            public void onSearchCollapse() {
                 search(null);
                 searching = false;
                 searchWas = false;
@@ -85,8 +85,6 @@ public class LanguageSelectActivity extends BaseFragment {
                     emptyTextView.setVisibility(View.GONE);
                     listView.setAdapter(listAdapter);
                 }
-
-                return true;
             }
 
             @Override
@@ -113,8 +111,8 @@ public class LanguageSelectActivity extends BaseFragment {
         emptyTextLayout.setOrientation(LinearLayout.VERTICAL);
         ((FrameLayout) fragmentView).addView(emptyTextLayout);
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) emptyTextLayout.getLayoutParams();
-        layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT;
-        layoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT;
+        layoutParams.width = LayoutHelper.MATCH_PARENT;
+        layoutParams.height = LayoutHelper.MATCH_PARENT;
         layoutParams.gravity = Gravity.TOP;
         emptyTextLayout.setLayoutParams(layoutParams);
         emptyTextLayout.setOnTouchListener(new View.OnTouchListener() {
@@ -131,16 +129,16 @@ public class LanguageSelectActivity extends BaseFragment {
         emptyTextView.setText(LocaleController.getString("NoResult", R.string.NoResult));
         emptyTextLayout.addView(emptyTextView);
         LinearLayout.LayoutParams layoutParams1 = (LinearLayout.LayoutParams) emptyTextView.getLayoutParams();
-        layoutParams1.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        layoutParams1.height = LinearLayout.LayoutParams.MATCH_PARENT;
+        layoutParams1.width = LayoutHelper.MATCH_PARENT;
+        layoutParams1.height = LayoutHelper.MATCH_PARENT;
         layoutParams1.weight = 0.5f;
         emptyTextView.setLayoutParams(layoutParams1);
 
         FrameLayout frameLayout = new FrameLayout(context);
         emptyTextLayout.addView(frameLayout);
         layoutParams1 = (LinearLayout.LayoutParams) frameLayout.getLayoutParams();
-        layoutParams1.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        layoutParams1.height = LinearLayout.LayoutParams.MATCH_PARENT;
+        layoutParams1.width = LayoutHelper.MATCH_PARENT;
+        layoutParams1.height = LayoutHelper.MATCH_PARENT;
         layoutParams1.weight = 0.5f;
         frameLayout.setLayoutParams(layoutParams1);
 
@@ -152,8 +150,8 @@ public class LanguageSelectActivity extends BaseFragment {
         listView.setAdapter(listAdapter);
         ((FrameLayout) fragmentView).addView(listView);
         layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
-        layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT;
-        layoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT;
+        layoutParams.width = LayoutHelper.MATCH_PARENT;
+        layoutParams.height = LayoutHelper.MATCH_PARENT;
         listView.setLayoutParams(layoutParams);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -214,7 +212,7 @@ public class LanguageSelectActivity extends BaseFragment {
                     }
                 });
                 builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                showAlertDialog(builder);
+                showDialog(builder.create());
                 return true;
             }
         });

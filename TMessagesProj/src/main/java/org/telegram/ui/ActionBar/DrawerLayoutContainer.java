@@ -25,10 +25,11 @@ import android.widget.FrameLayout;
 import android.widget.ListView;
 
 import org.telegram.android.AndroidUtilities;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
-import org.telegram.ui.AnimationCompat.AnimatorListenerAdapterProxy;
-import org.telegram.ui.AnimationCompat.AnimatorSetProxy;
-import org.telegram.ui.AnimationCompat.ObjectAnimatorProxy;
+import org.telegram.android.AnimationCompat.AnimatorListenerAdapterProxy;
+import org.telegram.android.AnimationCompat.AnimatorSetProxy;
+import org.telegram.android.AnimationCompat.ObjectAnimatorProxy;
 
 public class DrawerLayoutContainer extends FrameLayout {
 
@@ -57,6 +58,7 @@ public class DrawerLayoutContainer extends FrameLayout {
 
     private float drawerPosition = 0;
     private boolean drawerOpened = false;
+    private boolean allowDrawContent = true;
 
     public DrawerLayoutContainer(Context context) {
         super(context);
@@ -146,11 +148,11 @@ public class DrawerLayoutContainer extends FrameLayout {
         }
         requestLayout();
 
-        final int newVisibility = drawerPosition > 0 ? VISIBLE : INVISIBLE;
+        final int newVisibility = drawerPosition > 0 ? VISIBLE : GONE;
         if (drawerLayout.getVisibility() != newVisibility) {
             drawerLayout.setVisibility(newVisibility);
         }
-        setScrimOpacity(drawerPosition / (float)drawerLayout.getMeasuredWidth());
+        setScrimOpacity(drawerPosition / (float) drawerLayout.getMeasuredWidth());
     }
 
     public float getDrawerPosition() {
@@ -276,6 +278,13 @@ public class DrawerLayoutContainer extends FrameLayout {
         return drawerOpened;
     }
 
+    public void setAllowDrawContent(boolean value) {
+        if (allowDrawContent != value) {
+            allowDrawContent = value;
+            invalidate();
+        }
+    }
+
     public boolean onTouchEvent(MotionEvent ev) {
         if (!parentActionBarLayout.checkTransitionAnimation()) {
             if (drawerOpened && ev != null && ev.getX() > drawerPosition && !startedTracking) {
@@ -301,7 +310,7 @@ public class DrawerLayoutContainer extends FrameLayout {
                     float dx = (int) (ev.getX() - startedTrackingX);
                     float dy = Math.abs((int) ev.getY() - startedTrackingY);
                     velocityTracker.addMovement(ev);
-                    if (maybeStartTracking && !startedTracking && (dx > 0 && dx / 3.0f > Math.abs(dy) && Math.abs(dx) >= AndroidUtilities.getPixelsInCM(0.2f, true) || dx < 0 && Math.abs(dx) >= Math.abs(dy) && Math.abs(dx) >= AndroidUtilities.getPixelsInCM(0.3f, true))) {
+                    if (maybeStartTracking && !startedTracking && (dx > 0 && dx / 3.0f > Math.abs(dy) && Math.abs(dx) >= AndroidUtilities.getPixelsInCM(0.2f, true) || dx < 0 && Math.abs(dx) >= Math.abs(dy) && Math.abs(dx) >= AndroidUtilities.getPixelsInCM(0.4f, true))) {
                         prepareForDrawerOpen(ev);
                         startedTrackingX = (int) ev.getX();
                         requestDisallowInterceptTouchEvent(true);
@@ -374,7 +383,6 @@ public class DrawerLayoutContainer extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         inLayout = true;
-        final int width = r - l;
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             final View child = getChildAt(i);
@@ -385,10 +393,14 @@ public class DrawerLayoutContainer extends FrameLayout {
 
             final LayoutParams lp = (LayoutParams) child.getLayoutParams();
 
-            if (drawerLayout != child) {
-                child.layout(lp.leftMargin, lp.topMargin, lp.leftMargin + child.getMeasuredWidth(), lp.topMargin + child.getMeasuredHeight());
-            } else {
-                child.layout(-child.getMeasuredWidth() + (int)drawerPosition, lp.topMargin, (int)drawerPosition, lp.topMargin + child.getMeasuredHeight());
+            try {
+                if (drawerLayout != child) {
+                    child.layout(lp.leftMargin, lp.topMargin, lp.leftMargin + child.getMeasuredWidth(), lp.topMargin + child.getMeasuredHeight());
+                } else {
+                    child.layout(-child.getMeasuredWidth() + (int)drawerPosition, lp.topMargin, (int)drawerPosition, lp.topMargin + child.getMeasuredHeight());
+                }
+            } catch (Exception e) {
+                FileLog.e("tmessages", e);
             }
         }
         inLayout = false;
@@ -403,8 +415,6 @@ public class DrawerLayoutContainer extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
@@ -445,6 +455,9 @@ public class DrawerLayoutContainer extends FrameLayout {
 
     @Override
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+        if (!allowDrawContent) {
+            return false;
+        }
         final int height = getHeight();
         final boolean drawingContent = child != drawerLayout;
         int clipLeft = 0, clipRight = getWidth();

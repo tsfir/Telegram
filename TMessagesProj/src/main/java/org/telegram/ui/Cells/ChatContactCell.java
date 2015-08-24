@@ -108,7 +108,6 @@ public class ChatContactCell extends ChatBaseCell {
         float y = event.getY();
 
         boolean result = false;
-        int side = AndroidUtilities.dp(36);
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             if (x >= avatarImage.getImageX() && x <= avatarImage.getImageX() + namesWidth + AndroidUtilities.dp(42) && y >= avatarImage.getImageY() && y <= avatarImage.getImageY() + avatarImage.getImageHeight()) {
                 avatarPressed = true;
@@ -195,7 +194,7 @@ public class ChatContactCell extends ChatBaseCell {
                 currentPhoto = null;
                 avatarDrawable.setInfo(uid, null, null, false);
             }
-            avatarImage.setImage(currentPhoto, "50_50", avatarDrawable, false);
+            avatarImage.setImage(currentPhoto, "50_50", avatarDrawable, null, false);
 
             String currentNameString = ContactsController.formatName(messageObject.messageOwner.media.first_name, messageObject.messageOwner.media.last_name);
             int nameWidth = Math.min((int) Math.ceil(namePaint.measureText(currentNameString)), maxWidth);

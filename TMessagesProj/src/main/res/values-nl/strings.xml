@@ -59,12 +59,18 @@
     <string name="WillUnmuteIn">Over %1$s</string>
     <string name="MuteDisable">Uitschakelen</string>
     <string name="Hashtags">HASHTAGS</string>
+    <string name="Recent">RECENT</string>
     <!--broadcasts-->
     <string name="NewBroadcastList">Nieuwe verzendlijst</string>
     <string name="EnterListName">Naam van lijst</string>
     <string name="YouCreatedBroadcastList">Je hebt een verzendlijst gemaakt</string>
     <string name="AddRecipient">Ontvanger toevoegen</string>
     <string name="KickFromBroadcast">Verwijder van verzendlijst</string>
+    <!--audio view-->
+    <string name="NoAudio">Voeg bestanden toe aan de muziekbibliotheek op je apparaat om ze hier te zien.</string>
+    <string name="AttachMusic">Muziek</string>
+    <string name="AudioUnknownArtist">Onbekende artiest</string>
+    <string name="AudioUnknownTitle">Onbekende titel</string>
     <!--documents view-->
     <string name="SelectFile">Kies een bestand</string>
     <string name="FreeOfTotal">Vrij: %1$s van %2$s</string>
@@ -89,12 +95,17 @@
     <string name="IsSendingPhoto">%1$s verstuurt een foto</string>
     <string name="IsSendingVideo">%1$s verstuurt een video</string>
     <string name="IsSendingFile">%1$s verstuurt een bestand</string>
+    <string name="RecordingAudio">geluid opnemen</string>
+    <string name="SendingPhoto">foto versturen</string>
+    <string name="SendingVideoStatus">video versturen</string>
+    <string name="SendingFile">bestand versturen</string>
     <string name="GotAQuestion">Heb je een vraag\nover Telegram?</string>
     <string name="ChatTakePhoto">Foto maken</string>
     <string name="ChatGallery">Galerij</string>
     <string name="ChatLocation">Locatie</string>
     <string name="ChatVideo">Video</string>
     <string name="ChatDocument">Bestand</string>
+    <string name="ChatCamera">Camera</string>
     <string name="NoMessages">Nog geen berichten</string>
     <string name="ForwardedMessage">Doorgestuurd bericht</string>
     <string name="From">Van</string>
@@ -116,12 +127,16 @@
     <string name="DeleteThisChat">Chat verwijderen</string>
     <string name="SlideToCancel">SLEEP OM TE ANNULEREN</string>
     <string name="SaveToDownloads">Opslaan in Downloads</string>
+    <string name="SaveToMusic">Opslaan in muziek</string>
     <string name="ShareFile">Delen</string>
     <string name="ApplyLocalizationFile">Vertaling toepassen</string>
     <string name="UnsupportedAttachment">Bestandstype niet ondersteund</string>
     <string name="SetTimer">Zelfvernietigingstimer instellen</string>
     <string name="ServiceNotifications">Servicemeldingen</string>
     <string name="GettingLinkInfo">Link-preview ophalen...</string>
+    <string name="OpenInBrowser">Openen in browser</string>
+    <string name="CopyUrl">Link kopiëren</string>
+    <string name="SendItems">%1$s versturen</string>
     <!--notification-->
     <string name="MessageLifetimeChanged">%1$s heeft de zelfvernietigingstimer ingesteld op %2$s</string>
     <string name="MessageLifetimeChangedOutgoing">Je hebt de zelfvernietigingstimer ingesteld op %1$s</string>
@@ -157,6 +172,7 @@
     <string name="NotificationContactJoined">%1$s heeft nu Telegram!</string>
     <string name="NotificationUnrecognizedDevice">%1$s,\nEr is op je account ingelogd vanaf een nieuw apparaat op %2$s\n\nApparaat: %3$s\nLocatie: %4$s\n\nAls jij dit niet was, kun je die sessie beëindigen via Instellingen - Privacy en veiligheid - Sessies.\n\nAls je dat denkt dat iemand anders zonder jouw toestemming is ingelogd kun je twee-staps-verificatie activeren via instellingen - privacy en veiligheid .\n\nBedankt,\nHet Telegram-team</string>
     <string name="NotificationContactNewPhoto">%1$s heeft zijn/haar profielfoto gewijzigd</string>
+    <string name="NotificationInvitedToGroupByLink">%1$s neemt deel aan de groep %2$s via uitnodigingslink</string>
     <string name="Reply">Antwoord</string>
     <string name="ReplyToGroup">Antwoord op %1$s</string>
     <string name="ReplyToUser">Antwoord op %1$s</string>
@@ -182,6 +198,19 @@
     <string name="EnterGroupNamePlaceholder">Groepsnaam</string>
     <string name="GroupName">Groepsnaam</string>
     <string name="MembersCount">%1$d/%2$d deelnemers</string>
+    <string name="JoinToGroup">Wil je deelnemen aan de groep \'%1$s\'?</string>
+    <string name="JoinToGroupErrorFull">Sorry, deze groep is al vol.</string>
+    <string name="JoinToGroupErrorNotExist">Sorry, deze groep bestaat niet.</string>
+    <string name="LinkCopied">Link gekopieerd naar klembord.</string>
+    <string name="InviteToGroupByLink">Uitnodigingslink sturen</string>
+    <string name="InviteLink">Uitnodigingslink</string>
+    <string name="RevokeAlert">Deze link echt intrekken? Na intrekken kan niemand meer lid worden met de oude link.</string>
+    <string name="RevokeAlertNewLink">De oude link is nu inactief. Een nieuwe link is aangemaakt.</string>
+    <string name="RevokeButton">Intrekken</string>
+    <string name="RevokeLink">Link intrekken</string>
+    <string name="CopyLink">Link kopiëren</string>
+    <string name="ShareLink">Link delen</string>
+    <string name="LinkInfo">Andere Telegram-gebruikers kunnen aan je groep deelnemen door deze link te openen.</string>
     <!--group info view-->
     <string name="SharedMedia">Gedeelde media</string>
     <string name="SETTINGS">Instellingen</string>
@@ -223,6 +252,20 @@
     <string name="UsernameAvailable">%1$s is beschikbaar.</string>
     <string name="UsernameEmpty">Geen</string>
     <string name="ErrorOccurred">Er is een fout opgetreden.</string>
+    <!--stickers view-->
+    <string name="Stickers">Stickers</string>
+    <string name="StickersInfo">Ontwerpers kunnen stickerbundels toevoegen via onze bot: @stickers.\n\nGebruikers kunnen met een tik stickers toevoegen via \"Toevoegen aan stickers\".</string>
+    <string name="AddStickers">Stickers toevoegen</string>
+    <string name="AddToStickers">Toevoegen aan stickers</string>
+    <string name="AddStickersNotFound">Stickers niet gevonden</string>
+    <string name="StickersRemoved">Stickers verwijderd</string>
+    <string name="AddStickersInstalled">Nieuwe stickers toegevoegd</string>
+    <string name="StickersHide">Verbergen</string>
+    <string name="StickersShow">Weergeven</string>
+    <string name="StickersShare">Delen</string>
+    <string name="StickersCopy">Link kopiëren</string>
+    <string name="StickersRemove">Verwijder</string>
+    <string name="NoStickers">Nog geen stickers</string>
     <!--settings view-->
     <string name="ResetNotificationsText">Meldingen gereset</string>
     <string name="TextSize">Tekstgrootte berichten</string>
@@ -245,7 +288,7 @@
     <string name="ResetAllNotifications">Meldingen resetten</string>
     <string name="UndoAllCustom">Aangepaste meldingsinstellingen wissen voor contacten en groepen.</string>
     <string name="NotificationsAndSounds">Meldingen en geluiden</string>
-    <string name="BlockedUsers">Geblokkeerde gebruikers</string>
+    <string name="BlockedUsers">Geblokkeerd</string>
     <string name="LogOut">Uitloggen</string>
     <string name="NoSound">Geen geluid</string>
     <string name="Default">Standaard</string>
@@ -259,7 +302,7 @@
     <string name="ContactJoined">Contact lid van Telegram</string>
     <string name="Pebble">PEBBLE</string>
     <string name="Language">Taal</string>
-    <string name="AskAQuestionInfo">De ondersteuning van Telegram wordt gedaan door vrijwilligers.<![CDATA[<br>]]>We doen ons best om zo snel mogelijk te antwoorden.<![CDATA[<br><br>]]>Bekijk ook de <![CDATA[<a href=\"http://telegram.org/faq#general\">veelgestelde vragen</a>]]>. Hier staan de antwoorden op de meeste vragen en belangrijke tips voor <![CDATA[<a href=\"http://telegram.org/faq#troubleshooting\">het oplossen van problemen</a>]]>.</string>
+    <string name="AskAQuestionInfo">De ondersteuning van Telegram wordt gedaan door vrijwilligers. We doen ons best om zo snel mogelijk te antwoorden.<![CDATA[<br><br>]]>Bekijk ook de <![CDATA[<a href=\"https://telegram.org/faq#general\">veelgestelde vragen</a>]]>: Hierhier staan de antwoorden op de meeste vragen en belangrijke tips voor <![CDATA[<a href=\"https://telegram.org/faq#troubleshooting\">het oplossen van problemen</a>]]>.</string>
     <string name="AskButton">Vraag een vrijwilliger</string>
     <string name="TelegramFaq">Veelgestelde vragen</string>
     <string name="TelegramFaqUrl">https://telegram.org/faq</string>
@@ -311,6 +354,14 @@
     <string name="RepeatDisabled">Uit</string>
     <string name="InChatSound">Chatgeluiden</string>
     <string name="SoundDefault">Standaard</string>
+    <string name="VibrationDefault">Standaard</string>
+    <string name="SmartNotifications">Slimme meldingen</string>
+    <string name="SmartNotificationsDisabled">Uitgeschakeld</string>
+    <string name="SmartNotificationsInfo">Geluid maximaal %1$s per %2$s</string>
+    <string name="SmartNotificationsSoundAtMost">Geluid maximaal</string>
+    <string name="SmartNotificationsTimes">keer</string>
+    <string name="SmartNotificationsWithin">binnen</string>
+    <string name="SmartNotificationsMinutes">minuten</string>
     <!--sessions view-->
     <string name="SessionsTitle">Actieve sessies</string>
     <string name="CurrentSession">Huidige sessie</string>
@@ -341,24 +392,31 @@
     <string name="AutoLockDisabled">Uitgeschakeld</string>
     <!--media view-->
     <string name="NoMedia">Deel foto\'s en video\'s in deze chat om ze op al je apparaten te kunnen benaderen.</string>
-    <string name="DocumentsTitle">Bestanden</string>
+    <string name="DocumentsTitle">Gedeelde bestanden</string>
     <string name="SharedMediaTitle">Gedeelde media</string>
+    <string name="LinksTitle">Gedeelde links</string>
     <string name="NoSharedFiles">Deel bestanden en documenten in deze chat om ze op al je apparaten te kunnen benaderen.</string>
+    <string name="NoSharedLinks">Deel links in deze chat om ze op al je apparaten te kunnen benaderen.</string>
     <!--map view-->
     <string name="Map">Kaart</string>
     <string name="Satellite">Satelliet</string>
     <string name="Hybrid">Hybride</string>
     <string name="MetersAway">m hiervandaan</string>
     <string name="KMetersAway">km hiervandaan</string>
-    <string name="SendLocation">Locatie versturen</string>
-    <string name="ShareLocation">Locatie delen</string>
+    <string name="SendLocation">Huidige locatie sturen</string>
+    <string name="SendSelectedLocation">Geselecteerde locatie sturen</string>
+    <string name="ShareLocation">Locatie</string>
+    <string name="AccurateTo">Nauwkeurig tot op %1$s</string>
+    <string name="NearbyPlaces">OF KIES EEN PLEK</string>
     <!--photo gallery view-->
     <string name="ShowAllMedia">Alle media weergeven</string>
     <string name="SaveToGallery">Opslaan in galerij</string>
     <string name="Of">%1$d van %2$d</string>
     <string name="Gallery">Galerij</string>
     <string name="AllPhotos">Alle foto\'s</string>
+    <string name="AllVideo">Alle video\'s</string>
     <string name="NoPhotos">Nog geen foto\'s</string>
+    <string name="NoVideo">Nog geen video\'s</string>
     <string name="PleaseDownload">Download media eerst</string>
     <string name="NoRecentPhotos">Niets recents</string>
     <string name="NoRecentGIFs">Niets recents</string>
@@ -388,6 +446,11 @@
     <string name="DiscardChanges">Wijzigingen negeren?</string>
     <string name="ClearSearch">Zoekgeschiedenis wissen?</string>
     <string name="ClearButton">Wissen</string>
+    <string name="PickerPhotos">Foto\'s</string>
+    <string name="PickerVideo">Video</string>
+    <string name="AddCaption">Onderschrift toevoegen</string>
+    <string name="PhotoCaption">Foto-onderschrift</string>
+    <string name="VideoCaption">Video-onderschrift</string>
     <!--password view-->
     <string name="TwoStepVerification">Twee-staps-verificatie</string>
     <string name="SetAdditionalPassword">Extra wachtwoord instellen</string>
@@ -476,12 +539,23 @@
     <string name="EditedVideo">Bewerkte video</string>
     <string name="SendingVideo">Video versturen</string>
     <string name="CompressVideo">Video comprimeren</string>
+    <!--bot-->
+    <string name="Bot">bot</string>
+    <string name="BotShare">Delen</string>
+    <string name="BotInvite">Groepslid maken</string>
+    <string name="BotSettings">Instellingen</string>
+    <string name="BotHelp">Help</string>
+    <string name="BotStatusRead">toegang tot berichten</string>
+    <string name="BotStatusCantRead">geen toegang tot berichten</string>
+    <string name="BotInfoTitle">Wat kan deze bot?</string>
+    <string name="BotStart">BEGIN</string>
     <!--button titles-->
     <string name="Next">Volgende</string>
     <string name="Back">Vorige</string>
     <string name="Done">Gereed</string>
     <string name="Open">Openen</string>
     <string name="Cancel">Annuleren</string>
+    <string name="Close">Sluit</string>
     <string name="Add">Toevoegen</string>
     <string name="Edit">Wijzig</string>
     <string name="Send">Stuur</string>
@@ -497,6 +571,8 @@
     <string name="OK">OK</string>
     <string name="Crop">BIJSNIJDEN</string>
     <!--messages-->
+    <string name="ActionInviteYou">Je neemt deel aan de groep via uitnodigingslink</string>
+    <string name="ActionInviteUser">un1 neemt deel aan de groep via uitnodigingslink</string>
     <string name="ActionKickUser">un1 heeft un2 verwijderd</string>
     <string name="ActionLeftUser">un1 heeft de groep verlaten</string>
     <string name="ActionAddUser">un1 heeft un2 toegevoegd</string>
@@ -514,7 +590,8 @@
     <string name="ActionKickUserYou">un1 heeft je verwijderd</string>
     <string name="ActionAddUserYou">un1 heeft je toegevoegd</string>
     <string name="ActionAddUserSelf">un1 is terug in de groep</string>
-    <string name="UnsuppotedMedia">Dit bericht wordt niet ondersteund door jouw versie van Telegram. Werk Telegram bij om dit bericht te bekijken: http://telegram.org/update</string>
+    <string name="ActionAddUserSelfYou">Je keerde terug naar de groep</string>
+    <string name="UnsuppotedMedia">Dit bericht wordt niet ondersteund door jouw versie van Telegram. Werk Telegram bij om dit bericht te bekijken: https://telegram.org/update</string>
     <string name="AttachPhoto">Foto</string>
     <string name="AttachVideo">Video</string>
     <string name="AttachLocation">Locatie</string>
@@ -539,7 +616,10 @@
     <string name="NoHandleAppInstalled">Je hebt geen apps die bestandstype \'%1$s\' kunnen verwerken, gelieve een compatibele app te installeren</string>
     <string name="InviteUser">Deze gebruiker heeft nog geen Telegram. Wil je een uitnodiging sturen?</string>
     <string name="AreYouSure">Weet je het zeker?</string>
-    <string name="AddToTheGroup">%1$s toevoegen aan de groep?\n\nAantal recente berichten om door te sturen:</string>
+    <string name="AddToTheGroupTitle">%1$s toevoegen aan de groep %2$s?</string>
+    <string name="AddToTheGroupForwardCount">Aantal recente berichten om door te sturen:</string>
+    <string name="AddToTheGroup">%1$s toevoegen aan de groep?</string>
+    <string name="UserAlreadyInGroup">Gebruiker neemt al deel aan de groep</string>
     <string name="ForwardMessagesTo">Berichten doorsturen naar %1$s?</string>
     <string name="SendMessagesTo">Berichten naar %1$s versturen?</string>
     <string name="AreYouSureLogout">Weet je zeker dat je wilt uitloggen?\n\nTelegram kun je naadloos op al je apparaten tegelijkertijd gebruiken.\n\nLet op! Als je uitlogt worden al je geheime chats verwijderd.</string>
@@ -557,6 +637,8 @@
     <string name="SendMessagesToGroup">Berichten naar %1$s versturen?</string>
     <string name="ForwardMessagesToGroup">Berichten doorsturen naar %1$s?</string>
     <string name="FeatureUnavailable">Sorry, deze functie is momenteel niet beschikbaar in jouw land.</string>
+    <string name="NoUsernameFound">Er is geen Telegram-account met deze gebruikersnaam.</string>
+    <string name="BotCantJoinGroups">Deze bot kan geen groepslid worden.</string>
     <!--Intro view-->
     <string name="Page1Title">Telegram</string>
     <string name="Page2Title">Snel</string>
@@ -664,6 +746,30 @@
     <string name="Users_few">%1$d gebruikers</string>
     <string name="Users_many">%1$d gebruikers</string>
     <string name="Users_other">%1$d gebruikers</string>
+    <string name="Times_zero">%1$d keer</string>
+    <string name="Times_one">%1$d keer</string>
+    <string name="Times_two">%1$d keer</string>
+    <string name="Times_few">%1$d keer</string>
+    <string name="Times_many">%1$d keer</string>
+    <string name="Times_other">%1$d keer</string>
+    <string name="Meters_zero">%1$d meter</string>
+    <string name="Meters_one">%1$d meter</string>
+    <string name="Meters_two">%1$d meter</string>
+    <string name="Meters_few">%1$d meter</string>
+    <string name="Meters_many">%1$d meter</string>
+    <string name="Meters_other">%1$d meter</string>
+    <string name="Stickers_zero">%1$d stickers</string>
+    <string name="Stickers_one">%1$d sticker</string>
+    <string name="Stickers_two">%1$d stickers</string>
+    <string name="Stickers_few">%1$d stickers</string>
+    <string name="Stickers_many">%1$d stickers</string>
+    <string name="Stickers_other">%1$d stickers</string>
+    <string name="Photos_zero">%1$d foto\'s</string>
+    <string name="Photos_one">%1$d foto</string>
+    <string name="Photos_two">%1$d foto\'s</string>
+    <string name="Photos_few">%1$d foto\'s</string>
+    <string name="Photos_many">%1$d foto\'s</string>
+    <string name="Photos_other">%1$d foto\'s</string>
     <!--forwarded messages-->
     <string name="ForwardedMessage_zero">Bijlage: %1$d berichten</string>
     <string name="ForwardedMessage_one">Bijlage: 1 bericht</string>
@@ -730,4 +836,7 @@
     <string name="formatterDay24H">HH:mm</string>
     <string name="formatterDay12H">h:mm a</string>
     <string name="formatDateAtTime">%1$s om %2$s</string>
+    <!--update text-->
+    <string name="updateText">Telegram voor Android is bijgewerkt. Nieuw in versie 3.1.2:\n\n- Recente zoekresultaten\n- Stickers aantikken en vasthouden om een voorbeeld weer te geven voor het versturen.</string>
+    <string name="updateBuild">583</string>
 </resources>

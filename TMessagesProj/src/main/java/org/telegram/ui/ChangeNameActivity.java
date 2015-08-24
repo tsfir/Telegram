@@ -15,7 +15,6 @@ import android.text.InputType;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +37,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.Components.LayoutHelper;
 
 public class ChangeNameActivity extends BaseFragment {
 
@@ -49,7 +49,7 @@ public class ChangeNameActivity extends BaseFragment {
     private final static int done_button = 1;
 
     @Override
-    public View createView(Context context, LayoutInflater inflater) {
+    public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
         actionBar.setTitle(LocaleController.getString("EditName", R.string.EditName));
@@ -75,7 +75,8 @@ public class ChangeNameActivity extends BaseFragment {
             user = UserConfig.getCurrentUser();
         }
 
-        fragmentView = new LinearLayout(context);
+        LinearLayout linearLayout = new LinearLayout(context);
+        fragmentView = linearLayout;
         fragmentView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         ((LinearLayout) fragmentView).setOrientation(LinearLayout.VERTICAL);
         fragmentView.setOnTouchListener(new View.OnTouchListener() {
@@ -97,14 +98,7 @@ public class ChangeNameActivity extends BaseFragment {
         firstNameField.setImeOptions(EditorInfo.IME_ACTION_NEXT);
         firstNameField.setHint(LocaleController.getString("FirstName", R.string.FirstName));
         AndroidUtilities.clearCursorDrawable(firstNameField);
-        ((LinearLayout) fragmentView).addView(firstNameField);
-        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) firstNameField.getLayoutParams();
-        layoutParams.topMargin = AndroidUtilities.dp(24);
-        layoutParams.height = AndroidUtilities.dp(36);
-        layoutParams.leftMargin = AndroidUtilities.dp(24);
-        layoutParams.rightMargin = AndroidUtilities.dp(24);
-        layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        firstNameField.setLayoutParams(layoutParams);
+        linearLayout.addView(firstNameField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 36, 24, 24, 24, 0));
         firstNameField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -129,14 +123,7 @@ public class ChangeNameActivity extends BaseFragment {
         lastNameField.setImeOptions(EditorInfo.IME_ACTION_DONE);
         lastNameField.setHint(LocaleController.getString("LastName", R.string.LastName));
         AndroidUtilities.clearCursorDrawable(lastNameField);
-        ((LinearLayout) fragmentView).addView(lastNameField);
-        layoutParams = (LinearLayout.LayoutParams) lastNameField.getLayoutParams();
-        layoutParams.topMargin = AndroidUtilities.dp(16);
-        layoutParams.height = AndroidUtilities.dp(36);
-        layoutParams.leftMargin = AndroidUtilities.dp(24);
-        layoutParams.rightMargin = AndroidUtilities.dp(24);
-        layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        lastNameField.setLayoutParams(layoutParams);
+        linearLayout.addView(lastNameField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 36, 24, 16, 24, 0));
         lastNameField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {

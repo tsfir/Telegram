@@ -138,9 +138,9 @@ public class SearchAdapter extends BaseSearchAdapter {
 
                                 if (found != 0) {
                                     if (found == 1) {
-                                        resultArrayNames.add(Utilities.generateSearchName(user.first_name, user.last_name, q));
+                                        resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                     } else {
-                                        resultArrayNames.add(Utilities.generateSearchName("@" + user.username, null, "@" + q));
+                                        resultArrayNames.add(AndroidUtilities.generateSearchName("@" + user.username, null, "@" + q));
                                     }
                                     resultArray.add(user);
                                     break;
@@ -269,7 +269,7 @@ public class SearchAdapter extends BaseSearchAdapter {
                         ((UserCell) view).setChecked(checkedMap.containsKey(user.id), false);
                     }
                 } else {
-                    ((ProfileSearchCell) view).setData(user, null, null, name, username);
+                    ((ProfileSearchCell) view).setData(user, null, null, name, username, false);
                     ((ProfileSearchCell) view).useSeparator = (i != getCount() - 1 && i != searchResult.size() - 1);
                     if (ignoreUsers != null) {
                         if (ignoreUsers.containsKey(user.id)) {

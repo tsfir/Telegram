@@ -14,11 +14,13 @@ import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
+import android.text.TextUtils;
 import android.util.SparseArray;
 
 import org.telegram.PhoneFormat.PhoneFormat;
@@ -37,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ContactsController {
@@ -168,7 +169,7 @@ public class ContactsController {
         if (!updatingInviteText && (inviteText == null || time + 86400 < (int)(System.currentTimeMillis() / 1000))) {
             updatingInviteText = true;
             TLRPC.TL_help_getInviteText req = new TLRPC.TL_help_getInviteText();
-            req.lang_code = LocaleController.getLocaleString(Locale.getDefault());
+            req.lang_code = LocaleController.getLocaleString(LocaleController.getInstance().getSystemDefaultLocale());
             if (req.lang_code == null || req.lang_code.length() == 0) {
                 req.lang_code = "en";
             }
@@ -202,7 +203,19 @@ public class ContactsController {
 
     public void checkAppAccount() {
         AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
-        Account[] accounts = am.getAccountsByType("org.telegram.account");
+        Account[] accounts;
+        try {
+            accounts = am.getAccountsByType("org.telegram.account");
+            if (accounts != null && accounts.length > 0) {
+                for (Account c : accounts) {
+                    am.removeAccount(c, null, null);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e("tmessages", e);
+        }
+
+        accounts = am.getAccountsByType("org.telegram.messenger");
         boolean recreateAccount = false;
         if (UserConfig.isClientActivated()) {
             if (accounts.length == 1) {
@@ -227,7 +240,7 @@ public class ContactsController {
             }
             if (UserConfig.isClientActivated()) {
                 try {
-                    currentAccount = new Account(UserConfig.getCurrentUser().phone, "org.telegram.account");
+                    currentAccount = new Account(UserConfig.getCurrentUser().phone, "org.telegram.messenger");
                     am.addAccountExplicitly(currentAccount, "", null);
                 } catch (Exception e) {
                     FileLog.e("tmessages", e);
@@ -239,7 +252,7 @@ public class ContactsController {
     public void deleteAllAppAccounts() {
         try {
             AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
-            Account[] accounts = am.getAccountsByType("org.telegram.account");
+            Account[] accounts = am.getAccountsByType("org.telegram.messenger");
             for (Account c : accounts) {
                 am.removeAccount(c, null, null);
             }
@@ -318,7 +331,7 @@ public class ContactsController {
             ContentResolver cr = ApplicationLoader.applicationContext.getContentResolver();
 
             HashMap<String, Contact> shortContacts = new HashMap<>();
-            StringBuilder ids = new StringBuilder();
+            ArrayList<Integer> idsArr = new ArrayList<>();
             Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projectionPhones, null, null, null);
             if (pCur != null) {
                 if (pCur.getCount() > 0) {
@@ -343,10 +356,9 @@ public class ContactsController {
                         }
 
                         Integer id = pCur.getInt(0);
-                        if (ids.length() != 0) {
-                            ids.append(",");
+                        if (!idsArr.contains(id)) {
+                            idsArr.add(id);
                         }
-                        ids.append(id);
 
                         int type = pCur.getInt(2);
                         Contact contact = contactsMap.get(id);
@@ -380,8 +392,9 @@ public class ContactsController {
                 }
                 pCur.close();
             }
+            String ids = TextUtils.join(",", idsArr);
 
-            pCur = cr.query(ContactsContract.Data.CONTENT_URI, projectionNames, ContactsContract.CommonDataKinds.StructuredName.CONTACT_ID + " IN (" + ids.toString() + ") AND " + ContactsContract.Data.MIMETYPE + " = '" + ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE + "'", null, null);
+            pCur = cr.query(ContactsContract.Data.CONTENT_URI, projectionNames, ContactsContract.CommonDataKinds.StructuredName.CONTACT_ID + " IN (" + ids + ") AND " + ContactsContract.Data.MIMETYPE + " = '" + ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE + "'", null, null);
             if (pCur != null && pCur.getCount() > 0) {
                 while (pCur.moveToNext()) {
                     int id = pCur.getInt(0);
@@ -461,6 +474,23 @@ public class ContactsController {
         } catch (Exception e) {
             FileLog.e("tmessages", e);
             contactsMap.clear();
+        }
+        if (BuildVars.DEBUG_VERSION) {
+            for (HashMap.Entry<Integer, Contact> entry : contactsMap.entrySet()) {
+                Contact contact = entry.getValue();
+                FileLog.e("tmessages", "contact = " + contact.first_name + " " + contact.last_name);
+                if (contact.first_name.length() == 0 && contact.last_name.length() == 0 && contact.phones.size() > 0) {
+                    FileLog.e("tmessages", "warning, empty name for contact = " + contact.id);
+                }
+                FileLog.e("tmessages", "phones:");
+                for (String s : contact.phones) {
+                    FileLog.e("tmessages", "phone = " + s);
+                }
+                FileLog.e("tmessages", "short phones:");
+                for (String s : contact.shortPhones) {
+                    FileLog.e("tmessages", "short phone = " + s);
+                }
+            }
         }
         return contactsMap;
     }
@@ -557,7 +587,7 @@ public class ContactsController {
                             }
                         }
 
-                        boolean nameChanged = existing != null && (!existing.first_name.equals(value.first_name) || !existing.last_name.equals(value.last_name));
+                        boolean nameChanged = existing != null && (value.first_name.length() != 0 && !existing.first_name.equals(value.first_name) || value.last_name != null && !existing.last_name.equals(value.last_name));
                         if (existing == null || nameChanged) {
                             for (int a = 0; a < value.phones.size(); a++) {
                                 String sphone = value.shortPhones.get(a);
@@ -595,8 +625,12 @@ public class ContactsController {
                                 int index = existing.shortPhones.indexOf(sphone);
                                 if (index == -1) {
                                     if (request) {
-                                        if (contactsByPhone.containsKey(sphone)) {
-                                            continue;
+                                        TLRPC.TL_contact contact = contactsByPhone.get(sphone);
+                                        if (contact != null) {
+                                            TLRPC.User user = MessagesController.getInstance().getUser(contact.user_id);
+                                            if (user == null || user.first_name != null && user.first_name.length() != 0 || user.last_name != null && user.last_name.length() != 0) {
+                                                continue;
+                                            }
                                         }
 
                                         TLRPC.TL_inputPhoneContact imp = new TLRPC.TL_inputPhoneContact();
@@ -690,8 +724,12 @@ public class ContactsController {
                         int id = pair.getKey();
                         for (int a = 0; a < value.phones.size(); a++) {
                             String phone = value.shortPhones.get(a);
-                            if (contactsByPhone.containsKey(phone)) {
-                                continue;
+                            TLRPC.TL_contact contact = contactsByPhone.get(phone);
+                            if (contact != null) {
+                                TLRPC.User user = MessagesController.getInstance().getUser(contact.user_id);
+                                if (user == null || user.first_name != null && user.first_name.length() != 0 || user.last_name != null && user.last_name.length() != 0) {
+                                    continue;
+                                }
                             }
                             TLRPC.TL_inputPhoneContact imp = new TLRPC.TL_inputPhoneContact();
                             imp.client_id = id;
@@ -709,9 +747,9 @@ public class ContactsController {
                     if (!toImport.isEmpty()) {
                         if (BuildVars.DEBUG_VERSION) {
                             FileLog.e("tmessages", "start import contacts");
-//                            for (TLRPC.TL_inputPhoneContact contact : toImport) {
-//                                FileLog.e("tmessages", "add contact " + contact.first_name + " " + contact.last_name + " " + contact.phone);
-//                            }
+                            for (TLRPC.TL_inputPhoneContact contact : toImport) {
+                                FileLog.e("tmessages", "add contact " + contact.first_name + " " + contact.last_name + " " + contact.phone);
+                            }
                         }
                         final int count = (int)Math.ceil(toImport.size() / 500.0f);
                         for (int a = 0; a < count; a++) {
@@ -731,9 +769,9 @@ public class ContactsController {
                                         }
                                         TLRPC.TL_contacts_importedContacts res = (TLRPC.TL_contacts_importedContacts)response;
                                         if (BuildVars.DEBUG_VERSION) {
-//                                            for (TLRPC.User user : res.users) {
-//                                                FileLog.e("tmessages", "received user " + user.first_name + " " + user.last_name + " " + user.phone);
-//                                            }
+                                            for (TLRPC.User user : res.users) {
+                                                FileLog.e("tmessages", "received user " + user.first_name + " " + user.last_name + " " + user.phone);
+                                            }
                                         }
                                         MessagesStorage.getInstance().putUsersAndChats(res.users, null, true, true);
                                         ArrayList<TLRPC.TL_contact> cArr = new ArrayList<>();
@@ -891,9 +929,9 @@ public class ContactsController {
                     if (user != null) {
                         usersDict.put(user.id, user);
 
-//                        if (BuildVars.DEBUG_VERSION) {
-//                            FileLog.e("tmessages", "loaded user contact " + user.first_name + " " + user.last_name + " " + user.phone);
-//                        }
+                        if (BuildVars.DEBUG_VERSION) {
+                            FileLog.e("tmessages", "loaded user contact " + user.first_name + " " + user.last_name + " " + user.phone);
+                        }
                     }
                 }
 
@@ -901,9 +939,13 @@ public class ContactsController {
                     @Override
                     public void run() {
                         FileLog.e("tmessages", "done loading contacts");
-                        if (from == 1 && contactsArr.isEmpty()) {
+                        if (from == 1 && (contactsArr.isEmpty() || UserConfig.lastContactsSyncTime < (int) (System.currentTimeMillis() / 1000) - 24 * 60 * 60)) {
                             loadContacts(false, true);
                             return;
+                        }
+                        if (from == 0) {
+                            UserConfig.lastContactsSyncTime = (int) (System.currentTimeMillis() / 1000);
+                            UserConfig.saveConfig(false);
                         }
 
                         for (TLRPC.TL_contact contact : contactsArr) {
@@ -944,14 +986,8 @@ public class ContactsController {
                             public int compare(TLRPC.TL_contact tl_contact, TLRPC.TL_contact tl_contact2) {
                                 TLRPC.User user1 = usersDict.get(tl_contact.user_id);
                                 TLRPC.User user2 = usersDict.get(tl_contact2.user_id);
-                                String name1 = user1.first_name;
-                                if (name1 == null || name1.length() == 0) {
-                                    name1 = user1.last_name;
-                                }
-                                String name2 = user2.first_name;
-                                if (name2 == null || name2.length() == 0) {
-                                    name2 = user2.last_name;
-                                }
+                                String name1 = UserObject.getFirstName(user1);
+                                String name2 = UserObject.getFirstName(user2);
                                 return name1.compareTo(name2);
                             }
                         });
@@ -977,10 +1013,7 @@ public class ContactsController {
                                 contactsByPhonesDict.put(user.phone, value);
                             }
 
-                            String key = user.first_name;
-                            if (key == null || key.length() == 0) {
-                                key = user.last_name;
-                            }
+                            String key = UserObject.getFirstName(user);
                             if (key.length() > 1) {
                                 key = key.substring(0, 1);
                             }
@@ -1148,14 +1181,8 @@ public class ContactsController {
                 public int compare(TLRPC.TL_contact tl_contact, TLRPC.TL_contact tl_contact2) {
                     TLRPC.User user1 = MessagesController.getInstance().getUser(tl_contact.user_id);
                     TLRPC.User user2 = MessagesController.getInstance().getUser(tl_contact2.user_id);
-                    String name1 = user1.first_name;
-                    if (name1 == null || name1.length() == 0) {
-                        name1 = user1.last_name;
-                    }
-                    String name2 = user2.first_name;
-                    if (name2 == null || name2.length() == 0) {
-                        name2 = user2.last_name;
-                    }
+                    String name1 = UserObject.getFirstName(user1);
+                    String name2 = UserObject.getFirstName(user2);
                     return name1.compareTo(name2);
                 }
             });
@@ -1171,10 +1198,7 @@ public class ContactsController {
                 continue;
             }
 
-            String key = user.first_name;
-            if (key == null || key.length() == 0) {
-                key = user.last_name;
-            }
+            String key = UserObject.getFirstName(user);
             if (key.length() > 1) {
                 key = key.substring(0, 1);
             }
@@ -1246,7 +1270,7 @@ public class ContactsController {
     private void performWriteContactsToPhoneBook() {
         final ArrayList<TLRPC.TL_contact> contactsArray = new ArrayList<>();
         contactsArray.addAll(contacts);
-        Utilities.photoBookQueue.postRunnable(new Runnable() {
+        Utilities.phoneBookQueue.postRunnable(new Runnable() {
             @Override
             public void run() {
                 performWriteContactsToPhoneBookInternal(contactsArray);
@@ -1303,7 +1327,7 @@ public class ContactsController {
         }
 
         for (final Integer uid : contactsTD) {
-            Utilities.photoBookQueue.postRunnable(new Runnable() {
+            Utilities.phoneBookQueue.postRunnable(new Runnable() {
                 @Override
                 public void run() {
                     deleteContactFromPhoneBook(uid);
@@ -1463,7 +1487,7 @@ public class ContactsController {
         builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
         builder.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
         builder.withValue(ContactsContract.Data.MIMETYPE, "vnd.android.cursor.item/vnd.org.telegram.messenger.android.profile");
-        builder.withValue(ContactsContract.Data.DATA1, "+" + user.phone);
+        builder.withValue(ContactsContract.Data.DATA1, user.id);
         builder.withValue(ContactsContract.Data.DATA2, "Telegram Profile");
         builder.withValue(ContactsContract.Data.DATA3, "+" + user.phone);
         builder.withValue(ContactsContract.Data.DATA4, user.id);
@@ -1496,6 +1520,22 @@ public class ContactsController {
         }
     }
 
+    protected void markAsContacted(final String contactId) {
+        if (contactId == null) {
+            return;
+        }
+        Utilities.phoneBookQueue.postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                Uri uri = Uri.parse(contactId);
+                ContentValues values = new ContentValues();
+                values.put(ContactsContract.Contacts.LAST_TIME_CONTACTED, System.currentTimeMillis());
+                ContentResolver cr = ApplicationLoader.applicationContext.getContentResolver();
+                cr.update(uri, values, null, null);
+            }
+        });
+    }
+
     public void addContact(TLRPC.User user) {
         if (user == null || user.phone == null) {
             return;
@@ -1514,9 +1554,9 @@ public class ContactsController {
         contactsParams.add(c);
         req.contacts = contactsParams;
         req.replace = false;
-//        if (BuildVars.DEBUG_VERSION) {
-//            FileLog.e("tmessages", "add contact " + user.first_name + " " + user.last_name + " " + user.phone);
-//        }
+        if (BuildVars.DEBUG_VERSION) {
+            FileLog.e("tmessages", "add contact " + user.first_name + " " + user.last_name + " " + user.phone);
+        }
         ConnectionsManager.getInstance().performRpc(req, new RPCRequest.RPCRequestDelegate() {
             @Override
             public void run(TLObject response, TLRPC.TL_error error) {
@@ -1526,14 +1566,14 @@ public class ContactsController {
                 final TLRPC.TL_contacts_importedContacts res = (TLRPC.TL_contacts_importedContacts)response;
                 MessagesStorage.getInstance().putUsersAndChats(res.users, null, true, true);
 
-//                if (BuildVars.DEBUG_VERSION) {
-//                    for (TLRPC.User user : res.users) {
-//                        FileLog.e("tmessages", "received user " + user.first_name + " " + user.last_name + " " + user.phone);
-//                    }
-//                }
+                if (BuildVars.DEBUG_VERSION) {
+                    for (TLRPC.User user : res.users) {
+                        FileLog.e("tmessages", "received user " + user.first_name + " " + user.last_name + " " + user.phone);
+                    }
+                }
 
                 for (final TLRPC.User u : res.users) {
-                    Utilities.photoBookQueue.postRunnable(new Runnable() {
+                    Utilities.phoneBookQueue.postRunnable(new Runnable() {
                         @Override
                         public void run() {
                             addContactToPhoneBook(u, true);
@@ -1546,7 +1586,7 @@ public class ContactsController {
                     MessagesStorage.getInstance().putContacts(arrayList, false);
 
                     if (u.phone != null && u.phone.length() > 0) {
-                        String name = formatName(u.first_name, u.last_name);
+                        CharSequence name = formatName(u.first_name, u.last_name);
                         MessagesStorage.getInstance().applyPhoneBookUpdates(u.phone, "");
                         Contact contact = contactsBookSPhones.get(u.phone);
                         if (contact != null) {
@@ -1599,7 +1639,7 @@ public class ContactsController {
                     return;
                 }
                 MessagesStorage.getInstance().deleteContacts(uids);
-                Utilities.photoBookQueue.postRunnable(new Runnable() {
+                Utilities.phoneBookQueue.postRunnable(new Runnable() {
                     @Override
                     public void run() {
                         for (TLRPC.User user : users) {
@@ -1610,7 +1650,7 @@ public class ContactsController {
 
                 for (TLRPC.User user : users) {
                     if (user.phone != null && user.phone.length() > 0) {
-                        String name = ContactsController.formatName(user.first_name, user.last_name);
+                        CharSequence name = UserObject.getUserName(user);
                         MessagesStorage.getInstance().applyPhoneBookUpdates(user.phone, "");
                         Contact contact = contactsBookSPhones.get(user.phone);
                         if (contact != null) {
@@ -1772,22 +1812,37 @@ public class ContactsController {
     }
 
     public static String formatName(String firstName, String lastName) {
-        String result = "";
+        /*if ((firstName == null || firstName.length() == 0) && (lastName == null || lastName.length() == 0)) {
+            return LocaleController.getString("HiddenName", R.string.HiddenName);
+        }*/
+        if (firstName != null) {
+            firstName = firstName.trim();
+        }
+        if (lastName != null) {
+            lastName = lastName.trim();
+        }
+        StringBuilder result = new StringBuilder((firstName != null ? firstName.length() : 0) + (lastName != null ? lastName.length() : 0) + 1);
         if (LocaleController.nameDisplayOrder == 1) {
-            result = firstName;
-            if (result == null || result.length() == 0) {
-                result = lastName;
-            } else if (result.length() != 0 && lastName != null && lastName.length() != 0) {
-                result += " " + lastName;
+            if (firstName != null && firstName.length() > 0) {
+                result.append(firstName);
+                if (lastName != null && lastName.length() > 0) {
+                    result.append(" ");
+                    result.append(lastName);
+                }
+            } else if (lastName != null && lastName.length() > 0) {
+                result.append(lastName);
             }
         } else {
-            result = lastName;
-            if (result == null || result.length() == 0) {
-                result = firstName;
-            } else if (result.length() != 0 && firstName != null && firstName.length() != 0) {
-                result += " " + firstName;
+            if (lastName != null && lastName.length() > 0) {
+                result.append(lastName);
+                if (firstName != null && firstName.length() > 0) {
+                    result.append(" ");
+                    result.append(firstName);
+                }
+            } else if (firstName != null && firstName.length() > 0) {
+                result.append(firstName);
             }
         }
-        return result.trim();
+        return result.toString();
     }
 }

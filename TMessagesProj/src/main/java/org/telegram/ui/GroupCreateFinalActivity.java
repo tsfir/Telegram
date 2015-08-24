@@ -19,7 +19,6 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -47,6 +46,7 @@ import org.telegram.ui.Components.AvatarUpdater;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.Components.FrameLayoutFixed;
+import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
@@ -138,7 +138,7 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
     }
 
     @Override
-    public View createView(Context context, LayoutInflater inflater) {
+    public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
         if (isBroadcast) {
@@ -203,8 +203,8 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
         FrameLayout frameLayout = new FrameLayoutFixed(context);
         linearLayout.addView(frameLayout);
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) frameLayout.getLayoutParams();
-        layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams.width = LayoutHelper.MATCH_PARENT;
+        layoutParams.height = LayoutHelper.WRAP_CONTENT;
         layoutParams.gravity = Gravity.TOP | Gravity.LEFT;
         frameLayout.setLayoutParams(layoutParams);
 
@@ -254,7 +254,7 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
                             }
                         }
                     });
-                    showAlertDialog(builder);
+                    showDialog(builder.create());
                 }
             });
         }
@@ -276,8 +276,8 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
         nameTextView.setTextColor(0xff212121);
         frameLayout.addView(nameTextView);
         layoutParams1 = (FrameLayout.LayoutParams) nameTextView.getLayoutParams();
-        layoutParams1.width = FrameLayout.LayoutParams.MATCH_PARENT;
-        layoutParams1.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams1.width = LayoutHelper.MATCH_PARENT;
+        layoutParams1.height = LayoutHelper.WRAP_CONTENT;
         layoutParams1.leftMargin = LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(96);
         layoutParams1.rightMargin = LocaleController.isRTL ? AndroidUtilities.dp(96) : AndroidUtilities.dp(16);
         layoutParams1.gravity = Gravity.CENTER_VERTICAL;
@@ -313,8 +313,8 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
         listView.setAdapter(listAdapter = new ListAdapter(context));
         linearLayout.addView(listView);
         layoutParams = (LinearLayout.LayoutParams) listView.getLayoutParams();
-        layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
+        layoutParams.width = LayoutHelper.MATCH_PARENT;
+        layoutParams.height = LayoutHelper.MATCH_PARENT;
         listView.setLayoutParams(layoutParams);
 
         return fragmentView;
@@ -370,6 +370,12 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
     }
 
     @Override
+    public void onOpenAnimationEnd() {
+        nameTextView.requestFocus();
+        AndroidUtilities.showKeyboard(nameTextView);
+    }
+
+    @Override
     public void didReceivedNotification(int id, final Object... args) {
         if (id == NotificationCenter.updateInterfaces) {
             int mask = (Integer)args[0];
@@ -386,26 +392,21 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
             }
             donePressed = false;
         } else if (id == NotificationCenter.chatDidCreated) {
-            AndroidUtilities.runOnUIThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (progressDialog != null) {
-                        try {
-                            progressDialog.dismiss();
-                        } catch (Exception e) {
-                            FileLog.e("tmessages", e);
-                        }
-                    }
-                    int chat_id = (Integer)args[0];
-                    NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeChats);
-                    Bundle args2 = new Bundle();
-                    args2.putInt("chat_id", chat_id);
-                    presentFragment(new ChatActivity(args2), true);
-                    if (uploadedAvatar != null) {
-                        MessagesController.getInstance().changeChatAvatar(chat_id, uploadedAvatar);
-                    }
+            if (progressDialog != null) {
+                try {
+                    progressDialog.dismiss();
+                } catch (Exception e) {
+                    FileLog.e("tmessages", e);
                 }
-            });
+            }
+            int chat_id = (Integer)args[0];
+            NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeChats);
+            Bundle args2 = new Bundle();
+            args2.putInt("chat_id", chat_id);
+            presentFragment(new ChatActivity(args2), true);
+            if (uploadedAvatar != null) {
+                MessagesController.getInstance().changeChatAvatar(chat_id, uploadedAvatar);
+            }
         }
     }
 

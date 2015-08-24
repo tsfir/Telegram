@@ -13,7 +13,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -31,11 +30,12 @@ import org.telegram.messenger.TLRPC;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.Components.LayoutHelper;
 
 public class ChangePhoneHelpActivity extends BaseFragment {
 
     @Override
-    public View createView(Context context, LayoutInflater inflater) {
+    public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
 
@@ -70,8 +70,8 @@ public class ChangePhoneHelpActivity extends BaseFragment {
         ScrollView scrollView = new ScrollView(context);
         relativeLayout.addView(scrollView);
         RelativeLayout.LayoutParams layoutParams3 = (RelativeLayout.LayoutParams) scrollView.getLayoutParams();
-        layoutParams3.width = RelativeLayout.LayoutParams.MATCH_PARENT;
-        layoutParams3.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams3.width = LayoutHelper.MATCH_PARENT;
+        layoutParams3.height = LayoutHelper.WRAP_CONTENT;
         layoutParams3.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         scrollView.setLayoutParams(layoutParams3);
 
@@ -88,8 +88,8 @@ public class ChangePhoneHelpActivity extends BaseFragment {
         imageView.setImageResource(R.drawable.phone_change);
         linearLayout.addView(imageView);
         LinearLayout.LayoutParams layoutParams2 = (LinearLayout.LayoutParams) imageView.getLayoutParams();
-        layoutParams2.width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        layoutParams2.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams2.width = LayoutHelper.WRAP_CONTENT;
+        layoutParams2.height = LayoutHelper.WRAP_CONTENT;
         layoutParams2.gravity = Gravity.CENTER_HORIZONTAL;
         imageView.setLayoutParams(layoutParams2);
 
@@ -106,8 +106,8 @@ public class ChangePhoneHelpActivity extends BaseFragment {
         }
         linearLayout.addView(textView);
         layoutParams2 = (LinearLayout.LayoutParams) textView.getLayoutParams();
-        layoutParams2.width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        layoutParams2.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams2.width = LayoutHelper.WRAP_CONTENT;
+        layoutParams2.height = LayoutHelper.WRAP_CONTENT;
         layoutParams2.gravity = Gravity.CENTER_HORIZONTAL;
         layoutParams2.leftMargin = AndroidUtilities.dp(20);
         layoutParams2.rightMargin = AndroidUtilities.dp(20);
@@ -123,8 +123,8 @@ public class ChangePhoneHelpActivity extends BaseFragment {
         textView.setPadding(0, AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10));
         linearLayout.addView(textView);
         layoutParams2 = (LinearLayout.LayoutParams) textView.getLayoutParams();
-        layoutParams2.width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        layoutParams2.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams2.width = LayoutHelper.WRAP_CONTENT;
+        layoutParams2.height = LayoutHelper.WRAP_CONTENT;
         layoutParams2.gravity = Gravity.CENTER_HORIZONTAL;
         layoutParams2.leftMargin = AndroidUtilities.dp(20);
         layoutParams2.rightMargin = AndroidUtilities.dp(20);
@@ -147,7 +147,7 @@ public class ChangePhoneHelpActivity extends BaseFragment {
                     }
                 });
                 builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                showAlertDialog(builder);
+                showDialog(builder.create());
             }
         });
 

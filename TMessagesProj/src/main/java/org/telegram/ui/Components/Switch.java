@@ -33,7 +33,7 @@ import android.widget.CompoundButton;
 import org.telegram.android.AndroidUtilities;
 import org.telegram.android.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.ui.AnimationCompat.ObjectAnimatorProxy;
+import org.telegram.android.AnimationCompat.ObjectAnimatorProxy;
 
 public class Switch extends CompoundButton {
 
@@ -555,8 +555,6 @@ public class Switch extends CompoundButton {
 
         final int switchTop = mSwitchTop;
         final int switchBottom = mSwitchBottom;
-        final int switchInnerTop = switchTop + padding.top;
-        final int switchInnerBottom = switchBottom - padding.bottom;
 
         final Drawable thumbDrawable = mThumbDrawable;
         if (trackDrawable != null) {

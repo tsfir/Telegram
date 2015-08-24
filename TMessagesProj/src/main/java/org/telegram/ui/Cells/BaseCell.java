@@ -56,7 +56,9 @@ public class BaseCell extends View {
     }
 
     protected void setDrawableBounds(Drawable drawable, int x, int y, int w, int h) {
-        drawable.setBounds(x, y, x + w, y + h);
+        if (drawable != null) {
+            drawable.setBounds(x, y, x + w, y + h);
+        }
     }
 
     protected void startCheckLongPress() {
@@ -78,6 +80,11 @@ public class BaseCell extends View {
         if (pendingCheckForTap != null) {
             removeCallbacks(pendingCheckForTap);
         }
+    }
+
+    @Override
+    public boolean hasOverlappingRendering() {
+        return false;
     }
 
     protected void onLongPress() {

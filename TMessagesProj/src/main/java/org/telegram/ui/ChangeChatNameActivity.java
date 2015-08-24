@@ -16,7 +16,6 @@ import android.text.InputType;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +33,7 @@ import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.Components.LayoutHelper;
 
 public class ChangeChatNameActivity extends BaseFragment {
 
@@ -56,7 +56,7 @@ public class ChangeChatNameActivity extends BaseFragment {
     }
 
     @Override
-    public View createView(Context context, LayoutInflater inflater) {
+    public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
         actionBar.setTitle(LocaleController.getString("EditName", R.string.EditName));
@@ -79,7 +79,8 @@ public class ChangeChatNameActivity extends BaseFragment {
 
         TLRPC.Chat currentChat = MessagesController.getInstance().getChat(chat_id);
 
-        fragmentView = new LinearLayout(context);
+        LinearLayout linearLayout = new LinearLayout(context);
+        fragmentView = linearLayout;
         fragmentView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         ((LinearLayout) fragmentView).setOrientation(LinearLayout.VERTICAL);
         fragmentView.setOnTouchListener(new View.OnTouchListener() {
@@ -112,14 +113,7 @@ public class ChangeChatNameActivity extends BaseFragment {
             }
         });
 
-        ((LinearLayout) fragmentView).addView(firstNameField);
-        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) firstNameField.getLayoutParams();
-        layoutParams.topMargin = AndroidUtilities.dp(24);
-        layoutParams.height = AndroidUtilities.dp(36);
-        layoutParams.leftMargin = AndroidUtilities.dp(24);
-        layoutParams.rightMargin = AndroidUtilities.dp(24);
-        layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT;
-        firstNameField.setLayoutParams(layoutParams);
+        linearLayout.addView(firstNameField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 36, 24, 24, 24, 0));
 
         if (chat_id > 0) {
             firstNameField.setHint(LocaleController.getString("GroupName", R.string.GroupName));
