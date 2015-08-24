@@ -200,8 +200,8 @@ public class ContactsAdapter extends BaseSectionsAdapter {
                     actionCell.setTextAndIcon(LocaleController.getString("NewGroup", R.string.NewGroup), R.drawable.menu_newgroup);
                 } else if (position == 1) {
                     actionCell.setTextAndIcon(LocaleController.getString("NewSecretChat", R.string.NewSecretChat), R.drawable.menu_secret);
-                } else if (position == 2) {
-                    actionCell.setTextAndIcon(LocaleController.getString("NewBroadcastList", R.string.NewBroadcastList), R.drawable.menu_broadcast);
+                //} else if (position == 2) {
+                //    actionCell.setTextAndIcon(LocaleController.getString("NewBroadcastList", R.string.NewBroadcastList), R.drawable.menu_broadcast);
                 }
             }
         } else if (type == 1) {
