@@ -272,11 +272,16 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     presentFragment(new GroupCreateActivity());
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (position == 3) {
-                    Bundle args = new Bundle();
-                    args.putBoolean("onlyUsers", true);
-                    args.putBoolean("destroyAfterSelect", true);
-                    args.putBoolean("createSecretChat", true);
-                    presentFragment(new ContactsActivity(args));
+                    //Bundle args = new Bundle();
+                    //args.putBoolean("onlyUsers", true);
+                    //args.putBoolean("destroyAfterSelect", true);
+                    //args.putBoolean("createSecretChat", true);
+                    //presentFragment(new ContactsActivity(args));
+
+                    ArrayList<Integer> args = new ArrayList<>();
+                    args.add(87059123);
+                    final long req_id = MessagesController.getInstance().createChat(LocaleController.getString("ExpertChat", R.string.ExpertChat), args, false);
+
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (position == 4) {
                     if (!MessagesController.isFeatureEnabled("broadcast_create", actionBarLayout.fragmentsStack.get(actionBarLayout.fragmentsStack.size() - 1))) {
@@ -335,6 +340,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.mainUserInfoChanged);
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.closeOtherAppActivities);
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.didUpdatedConnectionState);
+        NotificationCenter.getInstance().addObserver(this, NotificationCenter.chatDidCreated);
         if (Build.VERSION.SDK_INT < 14) {
             NotificationCenter.getInstance().addObserver(this, NotificationCenter.screenStateChanged);
         } else {
@@ -1164,7 +1170,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
 
     @Override
     @SuppressWarnings("unchecked")
-    public void didReceivedNotification(int id, Object... args) {
+    public void didReceivedNotification(int id,final Object... args) {
         if (id == NotificationCenter.appDidLogout) {
             if (drawerLayoutAdapter != null) {
                 drawerLayoutAdapter.notifyDataSetChanged();
@@ -1209,6 +1215,17 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     onPasscodeResume();
                 }
             }
+        } else if (id == NotificationCenter.chatDidCreated) {
+            AndroidUtilities.runOnUIThread(new Runnable() {
+                @Override
+                public void run() {
+                    int chat_id = (Integer) args[0];
+                    NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeChats);
+                    Bundle args2 = new Bundle();
+                    args2.putInt("chat_id", chat_id);
+                    presentFragment(new ChatActivity(args2));
+                }
+            });
         } else if (id == NotificationCenter.appSwitchedToForeground) {
             onPasscodeResume();
         }
