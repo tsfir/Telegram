@@ -31,22 +31,22 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.telegram.android.AndroidUtilities;
-import org.telegram.android.ContactsController;
-import org.telegram.android.LocaleController;
-import org.telegram.android.MediaController;
-import org.telegram.android.MessagesController;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MediaController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.PhoneFormat.PhoneFormat;
-import org.telegram.android.NotificationsController;
-import org.telegram.android.UserObject;
+import org.telegram.messenger.NotificationsController;
+import org.telegram.messenger.UserObject;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.ConnectionsManager;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
-import org.telegram.android.NotificationCenter;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.TLRPC;
-import org.telegram.android.MessageObject;
+import org.telegram.tgnet.ConnectionsManager;
+import org.telegram.tgnet.TLRPC;
+import org.telegram.messenger.MessageObject;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -1066,7 +1066,7 @@ public class PopupNotificationActivity extends Activity implements NotificationC
     @Override
     public void onBackPressed() {
         if (chatActivityEnterView.isPopupShowing()) {
-            chatActivityEnterView.hidePopup();
+            chatActivityEnterView.hidePopup(true);
             return;
         }
         super.onBackPressed();
@@ -1089,7 +1089,7 @@ public class PopupNotificationActivity extends Activity implements NotificationC
         super.onPause();
         overridePendingTransition(0, 0);
         if (chatActivityEnterView != null) {
-            chatActivityEnterView.hidePopup();
+            chatActivityEnterView.hidePopup(false);
             chatActivityEnterView.setFieldFocused(false);
         }
         ConnectionsManager.getInstance().setAppPaused(true, false);

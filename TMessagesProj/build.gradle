@@ -5,15 +5,21 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:22.2.+'
+    compile 'com.android.support:support-v4:23.0.+'
     compile 'com.google.android.gms:play-services:3.2.+'
     compile 'net.hockeyapp.android:HockeySDK:3.5.+'
     compile 'com.googlecode.mp4parser:isoparser:1.0.+'
+    compile 'org.apache.httpcomponents:httpmime:4.2.1'
 }
 
 android {
     compileSdkVersion 22
-    buildToolsVersion '22.0.1'
+    buildToolsVersion '23.0.1'
+
+    packagingOptions {
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/LICENSE.txt'
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
@@ -73,7 +79,7 @@ android {
     defaultConfig {
         minSdkVersion 8
         targetSdkVersion 22
-        versionCode 586
-        versionName "3.1.2"
+        versionCode 627
+        versionName "3.2.2"
     }
 }

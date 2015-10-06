@@ -31,25 +31,26 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import org.telegram.android.AndroidUtilities;
-import org.telegram.android.Emoji;
-import org.telegram.android.LocaleController;
-import org.telegram.android.MediaController;
-import org.telegram.android.MessageObject;
-import org.telegram.android.MessagesController;
-import org.telegram.android.SendMessagesHelper;
-import org.telegram.messenger.ConnectionsManager;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.Emoji;
+import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MediaController;
+import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.FileLog;
-import org.telegram.android.NotificationCenter;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.TLRPC;
+import org.telegram.tgnet.ConnectionsManager;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.android.AnimationCompat.AnimatorListenerAdapterProxy;
-import org.telegram.android.AnimationCompat.AnimatorSetProxy;
-import org.telegram.android.AnimationCompat.ObjectAnimatorProxy;
-import org.telegram.android.AnimationCompat.ViewProxy;
+import org.telegram.messenger.AnimationCompat.AnimatorListenerAdapterProxy;
+import org.telegram.messenger.AnimationCompat.AnimatorSetProxy;
+import org.telegram.messenger.AnimationCompat.ObjectAnimatorProxy;
+import org.telegram.messenger.AnimationCompat.ViewProxy;
 import org.telegram.messenger.ApplicationLoader;
 
 import java.util.Locale;
@@ -80,8 +81,12 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
     private View topView;
     private PopupWindow botKeyboardPopup;
     private BotKeyboardView botKeyboardView;
+    private ImageView asAdminButton;
 
     private int currentPopupContentType = -1;
+
+    private boolean isAsAdmin;
+    private boolean adminModeAvailable;
 
     private boolean isPaused;
     private boolean showKeyboardOnResume;
@@ -199,7 +204,7 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
                 return super.onTouchEvent(event);
             }
         };
-        messageEditText.setHint(LocaleController.getString("TypeMessage", R.string.TypeMessage));
+        updateFieldHint();
         messageEditText.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         messageEditText.setInputType(messageEditText.getInputType() | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE);
         messageEditText.setSingleLine(false);
@@ -213,29 +218,45 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
         messageEditText.setHintTextColor(0xffb2b2b2);
         frameLayout.addView(messageEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 52, 0, isChat ? 50 : 2, 0));
         messageEditText.setOnKeyListener(new View.OnKeyListener() {
+
+            boolean ctrlPressed = false;
+
             @Override
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
                 if (i == KeyEvent.KEYCODE_BACK && !keyboardVisible && isPopupShowing()) {
                     if (keyEvent.getAction() == 1) {
+                        if (currentPopupContentType == 1 && botButtonsMessageObject != null) {
+                            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                            preferences.edit().putInt("hidekeyboard_" + dialog_id, botButtonsMessageObject.getId()).commit();
+                        }
                         showPopup(0, 0);
                     }
                     return true;
-                } else if (i == KeyEvent.KEYCODE_ENTER && sendByEnter && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                } else if (i == KeyEvent.KEYCODE_ENTER && (ctrlPressed || sendByEnter) && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
                     sendMessage();
+                    return true;
+                } else if (i == KeyEvent.KEYCODE_CTRL_LEFT || i == KeyEvent.KEYCODE_CTRL_RIGHT) {
+                    ctrlPressed = keyEvent.getAction() == KeyEvent.ACTION_DOWN;
                     return true;
                 }
                 return false;
             }
         });
         messageEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+
+            boolean ctrlPressed = false;
+
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     sendMessage();
                     return true;
-                } else if (sendByEnter) {
-                    if (keyEvent != null && i == EditorInfo.IME_NULL && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                } else if (keyEvent != null && i == EditorInfo.IME_NULL) {
+                    if ((ctrlPressed || sendByEnter) && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
                         sendMessage();
+                        return true;
+                    } else if (i == KeyEvent.KEYCODE_CTRL_LEFT || i == KeyEvent.KEYCODE_CTRL_RIGHT) {
+                        ctrlPressed = keyEvent.getAction() == KeyEvent.ACTION_DOWN;
                         return true;
                     }
                 }
@@ -266,13 +287,13 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
                 if (innerTextChange != 2 && before != count && (count - before) > 1) {
                     processChange = true;
                 }
-                if (message.length() != 0 && lastTypingTimeSend < System.currentTimeMillis() - 5000 && !ignoreTextChange) {
+                if (!isAsAdmin && message.length() != 0 && lastTypingTimeSend < System.currentTimeMillis() - 5000 && !ignoreTextChange) {
                     int currentTime = ConnectionsManager.getInstance().getCurrentTime();
                     TLRPC.User currentUser = null;
                     if ((int) dialog_id > 0) {
                         currentUser = MessagesController.getInstance().getUser((int) dialog_id);
                     }
-                    if (currentUser != null && (currentUser.id == UserConfig.getClientUserId() || currentUser.status != null && currentUser.status.expires < currentTime)) {
+                    if (currentUser != null && (currentUser.id == UserConfig.getClientUserId() || currentUser.status != null && currentUser.status.expires < currentTime && !MessagesController.getInstance().onlinePrivacy.containsKey(currentUser.id))) {
                         return;
                     }
                     lastTypingTimeSend = System.currentTimeMillis();
@@ -319,13 +340,35 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
                     if (botReplyMarkup != null) {
                         if (!isPopupShowing() || currentPopupContentType != 1) {
                             showPopup(1, 1);
+                            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                            preferences.edit().remove("hidekeyboard_" + dialog_id).commit();
                         } else {
+                            if (currentPopupContentType == 1 && botButtonsMessageObject != null) {
+                                SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                                preferences.edit().putInt("hidekeyboard_" + dialog_id, botButtonsMessageObject.getId()).commit();
+                            }
                             openKeyboardInternal();
                         }
                     } else if (hasBotCommands) {
                         setFieldText("/");
                         openKeyboard();
                     }
+                }
+            });
+
+            asAdminButton = new ImageView(context);
+            asAdminButton.setImageResource(isAsAdmin ? R.drawable.publish_active : R.drawable.publish);
+            asAdminButton.setScaleType(ImageView.ScaleType.CENTER);
+            asAdminButton.setVisibility(adminModeAvailable ? VISIBLE : GONE);
+            attachButton.addView(asAdminButton, LayoutHelper.createLinear(48, 48));
+            asAdminButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    isAsAdmin = !isAsAdmin;
+                    asAdminButton.setImageResource(isAsAdmin ? R.drawable.publish_active : R.drawable.publish);
+                    updateFieldHint();
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                    preferences.edit().putBoolean("asadmin_" + dialog_id, isAsAdmin).commit();
                 }
             });
         }
@@ -397,7 +440,7 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
                         }
                     }
                     startedDraggingX = -1;
-                    MediaController.getInstance().startRecording(dialog_id, replyingMessageObject);
+                    MediaController.getInstance().startRecording(dialog_id, replyingMessageObject, asAdmin());
                     updateAudioRecordIntefrace();
                     audioSendButton.getParent().requestDisallowInterceptTouchEvent(true);
                 } else if (motionEvent.getAction() == MotionEvent.ACTION_UP || motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
@@ -504,8 +547,12 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
         allowStickers = value;
     }
 
+    public boolean asAdmin() {
+        return isAsAdmin;
+    }
+
     public void showTopView(boolean animated) {
-        if (topView == null || topViewShowed) {
+        if (topView == null || topViewShowed || getVisibility() != VISIBLE) {
             return;
         }
         needShowTopView = true;
@@ -661,6 +708,32 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
 
     public void setDialogId(long id) {
         dialog_id = id;
+        if ((int) dialog_id < 0) {
+            TLRPC.Chat currentChat = MessagesController.getInstance().getChat(-(int) dialog_id);
+            isAsAdmin = ChatObject.isChannel(currentChat) && ((currentChat.flags & TLRPC.CHAT_FLAG_ADMIN) != 0 || (currentChat.flags & TLRPC.CHAT_FLAG_USER_IS_EDITOR) != 0);
+            adminModeAvailable = isAsAdmin && (currentChat.flags & TLRPC.CHAT_FLAG_IS_BROADCAST) == 0;
+            if (adminModeAvailable) {
+                SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                isAsAdmin = preferences.getBoolean("asadmin_" + dialog_id, true);
+            }
+            if (asAdminButton != null) {
+                asAdminButton.setVisibility(adminModeAvailable ? VISIBLE : GONE);
+                asAdminButton.setImageResource(isAsAdmin ? R.drawable.publish_active : R.drawable.publish);
+                updateFieldHint();
+            }
+        }
+    }
+
+    private void updateFieldHint() {
+        boolean isChannel = false;
+        if ((int) dialog_id < 0 && ChatObject.isChannel(MessagesController.getInstance().getChat(-(int) dialog_id))) {
+            isChannel = true;
+        }
+        if (isChannel) {
+            messageEditText.setHint(isAsAdmin ? LocaleController.getString("ChannelBroadcast", R.string.ChannelBroadcast) : LocaleController.getString("ChannelComment", R.string.ChannelComment));
+        } else {
+            messageEditText.setHint(LocaleController.getString("TypeMessage", R.string.TypeMessage));
+        }
     }
 
     public void setReplyingMessageObject(MessageObject messageObject) {
@@ -726,7 +799,7 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
             int count = (int) Math.ceil(text.length() / 4096.0f);
             for (int a = 0; a < count; a++) {
                 String mess = text.substring(a * 4096, Math.min((a + 1) * 4096, text.length()));
-                SendMessagesHelper.getInstance().sendMessage(mess, dialog_id, replyingMessageObject, messageWebPage, messageWebPageSearch);
+                SendMessagesHelper.getInstance().sendMessage(mess, dialog_id, replyingMessageObject, messageWebPage, messageWebPageSearch, asAdmin());
             }
             return true;
         }
@@ -1014,14 +1087,14 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
     }
 
     public void setCommand(MessageObject messageObject, String command) {
-        if (command == null) {
+        if (command == null || getVisibility() != VISIBLE) {
             return;
         }
         TLRPC.User user = messageObject != null && (int) dialog_id < 0 ? MessagesController.getInstance().getUser(messageObject.messageOwner.from_id) : null;
         if (botCount != 1 && user != null && (user.flags & TLRPC.USER_FLAG_BOT) != 0 && !command.contains("@")) {
-            SendMessagesHelper.getInstance().sendMessage(String.format(Locale.US, "%s@%s", command, user.username), dialog_id, null, null, false);
+            SendMessagesHelper.getInstance().sendMessage(String.format(Locale.US, "%s@%s", command, user.username), dialog_id, null, null, false, asAdmin());
         } else {
-            SendMessagesHelper.getInstance().sendMessage(command, dialog_id, null, null, false);
+            SendMessagesHelper.getInstance().sendMessage(command, dialog_id, null, null, false, asAdmin());
         }
         /*String text = messageEditText.getText().toString();
         text = command + " " + text.replaceFirst("^/[a-zA-Z@\\d_]{1,255}(\\s|$)", "");
@@ -1162,7 +1235,7 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
                 @Override
                 public void didPressedButton(CharSequence text) {
                     MessageObject object = replyingMessageObject != null ? replyingMessageObject : ((int) dialog_id < 0 ? botButtonsMessageObject : null);
-                    SendMessagesHelper.getInstance().sendMessage(text.toString(), dialog_id, object, null, false);
+                    SendMessagesHelper.getInstance().sendMessage(text.toString(), dialog_id, object, null, false, asAdmin());
                     if (replyingMessageObject != null) {
                         openKeyboardInternal();
                         setButtons(botMessageObject, false);
@@ -1184,13 +1257,14 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
         botKeyboardView.setPanelHeight(AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y ? keyboardHeightLand : keyboardHeight);
         botKeyboardView.setButtons(botReplyMarkup != null ? botReplyMarkup : null);
         if (botReplyMarkup != null) {
+            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+            boolean keyboardHidden = preferences.getInt("hidekeyboard_" + dialog_id, 0) == messageObject.getId();
             if (botButtonsMessageObject != replyingMessageObject && (botReplyMarkup.flags & 2) != 0) {
-                SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
                 if (preferences.getInt("answered_" + dialog_id, 0) == messageObject.getId()) {
                     return;
                 }
             }
-            if (messageEditText.length() == 0 && !isPopupShowing()) {
+            if (!keyboardHidden && messageEditText.length() == 0 && !isPopupShowing()) {
                 showPopup(1, 1);
             }
         } else {
@@ -1245,7 +1319,7 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
                     }
 
                     public void onStickerSelected(TLRPC.Document sticker) {
-                        SendMessagesHelper.getInstance().sendSticker(sticker, dialog_id, replyingMessageObject);
+                        SendMessagesHelper.getInstance().sendSticker(sticker, dialog_id, replyingMessageObject, asAdmin());
                         if (delegate != null) {
                             delegate.onMessageSend(null);
                         }
@@ -1321,8 +1395,12 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
         }
     }
 
-    public void hidePopup() {
+    public void hidePopup(boolean byBackButton) {
         if (isPopupShowing()) {
+            if (currentPopupContentType == 1 && byBackButton && botButtonsMessageObject != null) {
+                SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                preferences.edit().putInt("hidekeyboard_" + dialog_id, botButtonsMessageObject.getId()).commit();
+            }
             showPopup(0, 0);
         }
     }
