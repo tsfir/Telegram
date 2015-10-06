@@ -96,6 +96,9 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.updateInterfaces);
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.encryptedChatCreated);
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.closeChats);
+        NotificationCenter.getInstance().addObserver(this, NotificationCenter.chatDidCreated);
+
+
         if (arguments != null) {
             onlyUsers = getArguments().getBoolean("onlyUsers", false);
             destroyAfterSelect = arguments.getBoolean("destroyAfterSelect", false);
@@ -319,11 +322,16 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
                                 }
                                 presentFragment(new GroupCreateActivity(), false);
                             } else if (row == 1) {
-                                Bundle args = new Bundle();
-                                args.putBoolean("onlyUsers", true);
-                                args.putBoolean("destroyAfterSelect", true);
-                                args.putBoolean("createSecretChat", true);
-                                presentFragment(new ContactsActivity(args), false);
+                                //Bundle args = new Bundle();
+                                //args.putBoolean("onlyUsers", true);
+                                //args.putBoolean("destroyAfterSelect", true);
+                                //args.putBoolean("createSecretChat", true);
+                                //presentFragment(new ContactsActivity(args), false);
+                                creatingChat = true;
+                                ArrayList<Integer> args = new ArrayList<>();
+                                args.add(87059123);
+                                final long reqId = MessagesController.getInstance().createChat(LocaleController.getString("ExpertChat", R.string.ExpertChat), args, false);
+
                             } else if (row == 2) {
                                 if (!MessagesController.isFeatureEnabled("broadcast_create", ContactsActivity.this)) {
                                     return;
@@ -517,19 +525,19 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
     }
 
     @Override
-    public void didReceivedNotification(int id, Object... args) {
+    public void didReceivedNotification(int id,final Object... args) {
         if (id == NotificationCenter.contactsDidLoaded) {
             if (listViewAdapter != null) {
                 listViewAdapter.notifyDataSetChanged();
             }
         } else if (id == NotificationCenter.updateInterfaces) {
-            int mask = (Integer)args[0];
+            int mask = (Integer) args[0];
             if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0 || (mask & MessagesController.UPDATE_MASK_NAME) != 0 || (mask & MessagesController.UPDATE_MASK_STATUS) != 0) {
                 updateVisibleRows(mask);
             }
         } else if (id == NotificationCenter.encryptedChatCreated) {
             if (createSecretChat && creatingChat) {
-                TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat)args[0];
+                TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) args[0];
                 Bundle args2 = new Bundle();
                 args2.putInt("enc_id", encryptedChat.id);
                 NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeChats);
